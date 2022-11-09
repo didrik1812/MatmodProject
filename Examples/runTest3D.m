@@ -35,9 +35,9 @@ initcase = 1;
 switch initcase
   case 1
     cR      = zeros(nc, 1);
-    cR(1)   = sum(vols);
+    cR(1:578)   = sum(vols);
     cN      = zeros(nc, 1);
-    cN(end) = sum(vols);
+    cN(5202:5780) = sum(vols);
     cR_N = zeros(nc, 1);
   case 2
     cR = ones(nc, 1);
