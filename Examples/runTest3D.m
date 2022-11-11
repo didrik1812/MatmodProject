@@ -18,7 +18,7 @@ model = ReactionDiffusion(paramobj);
 
 
 % setup schedule
-total = 1e-8;
+total = 2e-3;
 n  = 10;
 dt = total/n;
 step = struct('val', dt*ones(n, 1), 'control', ones(n, 1));
@@ -29,26 +29,24 @@ schedule = struct('control', control, 'step', step);
 % setup initial state
 
 nc = G.cells.num;
-disp(nc)
-return
 vols = G.cells.volumes;
-concentrationR=10/15e25; %fix this according to dimension
-V=pi*(363/500)*e-21;
-initCN=5000/V;%fix this according to dimension
+initCR=1000*10; %fix this according to dimension
+V=2.281e-4;
+m=10;
+initCN=(5000*m)/V;%fix this according to dimension
 initcase = 1;
 switch initcase
   case 1
     cR      = zeros(nc, 1);
-    cR(1:578)   = sum(concentrationR);
+    cR(1:578)   = concentrationR;
     cN      = zeros(nc, 1);
-    cN(5203:5780) = sum(initCN);
+    cN(5203:5780) = initCN;
     cR_N = zeros(nc, 1);
   case 2
     cR = ones(nc, 1);
     cN = ones(nc, 1);
     cR_N = zeros(nc, 1);
 end
-
 initstate.R.c = cR;
 initstate.N.c = cN;
 initstate.R_N.c = cR_N;

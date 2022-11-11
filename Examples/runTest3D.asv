@@ -18,8 +18,8 @@ model = ReactionDiffusion(paramobj);
 
 
 % setup schedule
-total = 1e-1;
-n  = 100;
+total = 2e-2;
+n  = 10;
 dt = total/n;
 step = struct('val', dt*ones(n, 1), 'control', ones(n, 1));
 
@@ -30,22 +30,22 @@ schedule = struct('control', control, 'step', step);
 
 nc = G.cells.num;
 vols = G.cells.volumes;
-concentrationR=1000e12; %fix this according to dimension
-initCN=5000;%fix this according to dimension
+initCR=1000*10; %fix this according to dimension
+V=2.281e-4;
+initCN=5000/V;%fix this according to dimension
 initcase = 1;
 switch initcase
   case 1
     cR      = zeros(nc, 1);
-    cR(1:578)   = sum(concentrationR);
+    cR(1:578)   = concentrationR;
     cN      = zeros(nc, 1);
-    cN(5203:5780) = sum(initCN);
+    cN(5203:5780) = initCN;
     cR_N = zeros(nc, 1);
   case 2
     cR = ones(nc, 1);
     cN = ones(nc, 1);
     cR_N = zeros(nc, 1);
 end
-
 initstate.R.c = cR;
 initstate.N.c = cN;
 initstate.R_N.c = cR_N;
@@ -57,6 +57,7 @@ nls.errorOnFailure = false;
 
 [~, states, report] = simulateScheduleAD(initstate, model, schedule, 'NonLinearSolver', nls);
 
+states.CN(bottom) += 5000/V
 
 
 %%
