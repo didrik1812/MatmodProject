@@ -18,8 +18,8 @@ model = ReactionDiffusion(paramobj);
 
 
 % setup schedule
-total = 100;
-n  = 100;
+total = 1e-8;
+n  = 10;
 dt = total/n;
 step = struct('val', dt*ones(n, 1), 'control', ones(n, 1));
 
@@ -29,15 +29,19 @@ schedule = struct('control', control, 'step', step);
 % setup initial state
 
 nc = G.cells.num;
+disp(nc)
+return
 vols = G.cells.volumes;
-
+concentrationR=10/15e25; %fix this according to dimension
+V=pi*(363/500)*e-21;
+initCN=5000/V;%fix this according to dimension
 initcase = 1;
 switch initcase
   case 1
     cR      = zeros(nc, 1);
-    cR(1:578)   = sum(vols);
+    cR(1:578)   = sum(concentrationR);
     cN      = zeros(nc, 1);
-    cN(5202:5780) = sum(vols);
+    cN(5203:5780) = sum(initCN);
     cR_N = zeros(nc, 1);
   case 2
     cR = ones(nc, 1);
@@ -89,6 +93,6 @@ for istate = 1 : numel(states)
     title('R-N concentration')
 
     drawnow
-    pause(0.1);
+    pause(0.5);
     
 end

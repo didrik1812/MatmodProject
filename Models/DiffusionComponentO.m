@@ -1,4 +1,4 @@
-classdef DiffusionComponent < BaseModel
+classdef DiffusionComponentO < BaseModel
 
     properties
         
@@ -7,7 +7,7 @@ classdef DiffusionComponent < BaseModel
 
     methods
         
-        function model = DiffusionComponent(paramobj)
+        function model = DiffusionComponentO(paramobj)
 
             model = model@BaseModel();
             
@@ -38,15 +38,15 @@ classdef DiffusionComponent < BaseModel
             
             model = model.registerVarNames(varnames);
 
-            fn = @DiffusionComponent.updateFlux;
+            fn = @DiffusionComponentO.updateFlux;
             inputnames = {'c'};
             model = model.registerPropFunction({'flux', fn, inputnames});
 
-            fn = @DiffusionComponent.updateMassConservation;
+            fn = @DiffusionComponentO.updateMassConservation;
             inputnames = {'accum', 'flux', 'source'};
             model = model.registerPropFunction({'massCons', fn, inputnames});
             
-            fn = @DiffusionComponent.updateMassAccum;
+            fn = @DiffusionComponentO.updateMassAccum;
             inputnames = {'c'};
             model = model.registerPropFunction({'accum', fn, inputnames});
 

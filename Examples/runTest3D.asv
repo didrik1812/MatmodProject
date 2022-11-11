@@ -2,23 +2,23 @@ close all
 
 mrstModule add ad-core mrst-gui 
 
-jsonfile = fileread('diffusion.json');
+jsonfile = fileread('diffusion2.json');
 jsonstruct = jsondecode(jsonfile);
 
-paramobj = ReactionDiffusionInputParamsO(jsonstruct);
+paramobj = ReactionDiffusionInputParams(jsonstruct);
 
-G = cartGrid([50, 50]);
+G = Cylindergrid();
 G = computeGeometry(G);
 
 paramobj.G = G;
 
 paramobj = paramobj.validateInputParams();
 
-model = ReactionDiffusionO(paramobj);
+model = ReactionDiffusion(paramobj);
 
 
 % setup schedule
-total = 100;
+total = 1e-1;
 n  = 100;
 dt = total/n;
 step = struct('val', dt*ones(n, 1), 'control', ones(n, 1));
@@ -30,24 +30,25 @@ schedule = struct('control', control, 'step', step);
 
 nc = G.cells.num;
 vols = G.cells.volumes;
-
+concentrationR=1000e12; %fix this according to dimension
+initCN=5000;%fix this according to dimension
 initcase = 1;
 switch initcase
   case 1
-    cA      = zeros(nc, 1);
-    cA(1)   = sum(vols);
-    cB      = zeros(nc, 1);
-    cB(end) = sum(vols);
-    cC = zeros(nc, 1);
+    cR      = zeros(nc, 1);
+    cR(1:578)   = sum(concentrationR);
+    cN      = zeros(nc, 1);
+    cN(5203:5780) = sum(initCN);
+    cR_N = zeros(nc, 1);
   case 2
-    cA = ones(nc, 1);
-    cB = ones(nc, 1);
-    cC = zeros(nc, 1);
+    cR = ones(nc, 1);
+    cN = ones(nc, 1);
+    cR_N = zeros(nc, 1);
 end
 
-initstate.A.c = cA;
-initstate.B.c = cB;
-initstate.C.c = cC;
+initstate.R.c = cR;
+initstate.N.c = cN;
+initstate.R_N.c = cR_N;
 
 % run simulation
 
@@ -72,23 +73,23 @@ for istate = 1 : numel(states)
 
     set(0, 'currentfigure', 1);
     cla
-    plotCellData(model.G, state.A.c);
+    plotCellData(model.G, state.R.c);view(30,60);
     colorbar
-    title('A concentration')
+    title('R concentration')
     
     set(0, 'currentfigure', 2);
     cla
-    plotCellData(model.G, state.B.c);
+    plotCellData(model.G, state.N.c); view(30,60);
     colorbar
-    title('B concentration')
+    title('N concentration')
 
     set(0, 'currentfigure', 3);
     cla
-    plotCellData(model.G, state.C.c);
+    plotCellData(model.G, state.R_N.c);view(30,60);
     colorbar
-    title('C concentration')
+    title('R-N concentration')
 
     drawnow
-    pause(0.1);
+    pause(0.5);
     
 end

@@ -1,4 +1,4 @@
-classdef ReactionDiffusionInputParams < InputParams
+classdef ReactionDiffusionInputParamsO < InputParams
 
     properties
         
@@ -14,7 +14,7 @@ classdef ReactionDiffusionInputParams < InputParams
     
     methods
         
-        function paramobj = ReactionDiffusionInputParams(jsonstruct)
+        function paramobj = ReactionDiffusionInputParamsO(jsonstruct)
             
             paramobj = paramobj@InputParams(jsonstruct);
             

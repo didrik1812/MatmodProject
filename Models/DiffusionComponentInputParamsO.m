@@ -1,4 +1,4 @@
-classdef DiffusionComponentInputParams < ComponentInputParams
+classdef DiffusionComponentInputParamsO < ComponentInputParams
 
     properties
         
@@ -9,7 +9,7 @@ classdef DiffusionComponentInputParams < ComponentInputParams
     
     methods
 
-        function paramobj = DiffusionComponentInputParams(jsonstruct)
+        function paramobj = DiffusionComponentInputParamsO(jsonstruct)
             paramobj = paramobj@ComponentInputParams(jsonstruct);
         end
         

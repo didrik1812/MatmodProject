@@ -1,4 +1,4 @@
-classdef ReactionDiffusion < BaseModel
+classdef ReactionDiffusionO < BaseModel
 
     properties
         
@@ -12,7 +12,7 @@ classdef ReactionDiffusion < BaseModel
     
     methods
         
-        function model = ReactionDiffusion(paramobj)
+        function model = ReactionDiffusionO(paramobj)
             
             model = model@BaseModel();
             
@@ -40,7 +40,7 @@ classdef ReactionDiffusion < BaseModel
             model = registerVarAndPropfuncNames@BaseModel(model);
             
             %% Temperature dispatch functions
-            fn = @ReactionDiffusion.updateSourceTerm;
+            fn = @ReactionDiffusionO.updateSourceTerm;
             
             inputnames = {{'A', 'c'}, ...
                           {'B', 'c'}};
