@@ -6,12 +6,36 @@ jsonfile = fileread('diffusion2.json');
 jsonstruct = jsondecode(jsonfile);
 
 paramobj = ReactionDiffusionInputParams(jsonstruct);
-paramobj.k_1=paramobj.k_1*(mol/deci*meter)*(1/second);
-paramobj.k_2=paramobj.k_2*(1/second);
-paramobj.N.D=paramobj.N.D*(meter^2/second);
 
 G = Cylindergrid();
 G = computeGeometry(G);
+
+
+nc = G.cells.num;
+one_layer = nc/10;
+%V = sum(G.cells.volumes(1:nc));
+%V_eps = sum(G.cells.volumes(1:one_layer));
+V = pi*(0.22*micro*meter)^2 * 15 * nano*meter;
+V_eps = V/10;
+
+
+L = 0.22 * micro*meter;
+alpha = 8*10^(-7) * meter^2 / second;
+R_0 = 1000 * (micro * meter)^(-2);
+N_0 = 5000;
+k_1_tilde = 4e6 * (second * mol/litre)^(-1);
+k_2_tilde = 5 * second^(-1);
+
+
+k_1 = k_1_tilde * R_0/V_eps * L^2 /alpha;
+k_2 = k_2_tilde * R_0 * V/(N_0 * V_eps) * L^2 / alpha;
+
+
+paramobj.k_1=k_1;%paramobj.k_1*(mol/deci*meter)*(1/second);
+paramobj.k_2=k_2;%paramobj.k_2*(1/second);
+paramobj.N.D=1;%paramobj.N.D*(meter^2/second);
+
+
 
 paramobj.G = G;
 
@@ -21,8 +45,8 @@ model = ReactionDiffusion(paramobj);
 
 
 % setup schedule
-total = 5e-8;
-n  = 1000000;
+total = 1;
+n  = 100;
 dt = total/n;
 step = struct('val', dt*ones(n, 1), 'control', ones(n, 1));
 
@@ -33,17 +57,20 @@ schedule = struct('control', control, 'step', step);
 
 nc = G.cells.num;
 vols = G.cells.volumes;
-initCR=1000*((micro*meter)^2)/sum(G.cells.volumes(1:518)); %fix this according to dimension
-V=sum(G.cells.volumes(5203:5780));
+%initCR=1000*((micro*meter)^2)/sum(G.cells.volumes(1:518)); %fix this according to dimension
+initCR = 1; %R_0 / V_eps;
+
+%V=sum(G.cells.volumes(5203:5780));
 m=1;
-initCN=(5000*m)/V;%fix this according to dimension
+%initCN=(5000*m)/V;%fix this according to dimension
+initCN = 1;%N_0/V;
 initcase = 1;
 switch initcase
   case 1
     cR      = zeros(nc, 1);
-    cR(1:578)   = initCR;
+    cR(1:one_layer)   = initCR;
     cN      = zeros(nc, 1);
-    cN(5203:5780) = initCN;
+    cN(end - one_layer:end) = initCN;
     cR_N = zeros(nc, 1);
   case 2
     cR = ones(nc, 1);
@@ -53,6 +80,7 @@ end
 initstate.R.c = cR;
 initstate.N.c = cN;
 initstate.R_N.c = cR_N;
+
 
 % run simulation
 
