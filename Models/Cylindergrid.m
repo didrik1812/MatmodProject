@@ -1,10 +1,10 @@
 function G = Cylindergrid(r_max , r_min ,step , z_max, dens)
 % Make a cylindrical triangular grid
     arguments
-        r_max(1,1) double  = 0;
-        r_min(1,1) double  = -3.55;
+        r_max(1,1) double  = log(0.22*micro*meter);
+        r_min(1,1) double  = log(0.1*nano*meter);
         step(1,1) double  = 0.25;
-        z_max(1,1) double  = 10;
+        z_max(1,10) double  = convertFrom(ones(10,1)*(15/10), nano*meter);
         dens(1,1) double  = 20;
     end
     P = [];
