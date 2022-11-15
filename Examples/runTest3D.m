@@ -2,13 +2,15 @@ close all
 
 mrstModule add ad-core mrst-gui 
 
-jsonfile = fileread('diffusion2.json');
-jsonstruct = jsondecode(jsonfile);
+% jsonfile = fileread('diffusion2.json');
+% jsonstruct = jsondecode(jsonfile);
 
-paramobj = ReactionDiffusionInputParams(jsonstruct);
-paramobj.k_1=paramobj.k_1*(mol/deci*meter)*(1/second);
-paramobj.k_2=paramobj.k_2*(1/second);
-paramobj.N.D=paramobj.N.D*(meter^2/second);
+paramobj       = ReactionDiffusionInputParams([]);
+paramobj.k_1   = 4e6*(mol/litre)*(1/second);
+paramobj.k_2   = 5*(1/second);
+paramobj.N.D   = 8e-7*(meter^2/second);
+paramobj.R.D   = 0*(meter^2/second);
+paramobj.R_N.D = 0*(meter^2/second);
 
 G = Cylindergrid();
 G = computeGeometry(G);
@@ -19,39 +21,53 @@ paramobj = paramobj.validateInputParams();
 
 model = ReactionDiffusion(paramobj);
 
-
 % setup schedule
 total = 5e-8;
-n  = 1000000;
+n  = 10;
 dt = total/n;
 step = struct('val', dt*ones(n, 1), 'control', ones(n, 1));
 
 control.none = [];
 schedule = struct('control', control, 'step', step);
 
+G = model.G;
+receptorCells = (1 : 518)';
+injectionCells = (5203 : 5780)';
+% plot injection and receptor cells
+figure
+plotGrid(G, 'facecolor', 'none');
+plotGrid(G, injectionCells, 'facecolor', 'yellow');
+plotGrid(G, receptorCells, 'facecolor', 'red');
+view(33, 26);
+
+return
+
 % setup initial state
 
-nc = G.cells.num;
-vols = G.cells.volumes;
-initCR=1000*((micro*meter)^2)/sum(G.cells.volumes(1:518)); %fix this according to dimension
-V=sum(G.cells.volumes(5203:5780));
+nc     = G.cells.num;
+vols   = G.cells.volumes;
+initCR = 1000*((micro*meter)^2)/sum(G.cells.volumes(1:518)); %fix this according to dimension
+V      = sum(G.cells.volumes(5203:5780));
+
 m=1;
 initCN=(5000*m)/V;%fix this according to dimension
 initcase = 1;
+
 switch initcase
   case 1
-    cR      = zeros(nc, 1);
-    cR(1:578)   = initCR;
-    cN      = zeros(nc, 1);
+    cR            = zeros(nc, 1);
+    cR(1:578)     = initCR;
+    cN            = zeros(nc, 1);
     cN(5203:5780) = initCN;
-    cR_N = zeros(nc, 1);
+    cR_N          = zeros(nc, 1);
   case 2
-    cR = ones(nc, 1);
-    cN = ones(nc, 1);
+    cR   = ones(nc, 1);
+    cN   = ones(nc, 1);
     cR_N = zeros(nc, 1);
 end
-initstate.R.c = cR;
-initstate.N.c = cN;
+
+initstate.R.c   = cR;
+initstate.N.c   = cN;
 initstate.R_N.c = cR_N;
 
 % run simulation
