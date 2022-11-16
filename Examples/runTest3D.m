@@ -22,8 +22,8 @@ paramobj = paramobj.validateInputParams();
 model = ReactionDiffusion(paramobj);
 
 % setup schedule
-total = 5e-8;
-n  = 10;
+total = 5e-2;
+n  = 100;
 dt = total/n;
 step = struct('val', dt*ones(n, 1), 'control', ones(n, 1));
 
@@ -31,23 +31,27 @@ control.none = [];
 schedule = struct('control', control, 'step', step);
 
 G = model.G;
-receptorCells = (1 : 518)';
-injectionCells = (5203 : 5780)';
+receptorCells = (1 : 1218)';
+injectionCells = (10963 : 12180)';
 % plot injection and receptor cells
-figure
-plotGrid(G, 'facecolor', 'none');
-plotGrid(G, injectionCells, 'facecolor', 'yellow');
-plotGrid(G, receptorCells, 'facecolor', 'red');
-view(33, 26);
 
-return
+%figure
+%plotGrid(G, 'facecolor', 'none');
+%plotGrid(G, injectionCells, 'facecolor', 'yellow');
+%plotGrid(G, receptorCells, 'facecolor', 'red');
+%view(33, 26);
+
+
+
+
+
 
 % setup initial state
 
 nc     = G.cells.num;
 vols   = G.cells.volumes;
-initCR = 1000*((micro*meter)^2)/sum(G.cells.volumes(1:518)); %fix this according to dimension
-V      = sum(G.cells.volumes(5203:5780));
+initCR = 1000*((micro*meter)^2)/sum(G.cells.volumes(1:1218)); %fix this according to dimension
+V      = sum(G.cells.volumes(10963:12180));
 
 m=1;
 initCN=(5000*m)/V;%fix this according to dimension
@@ -56,9 +60,9 @@ initcase = 1;
 switch initcase
   case 1
     cR            = zeros(nc, 1);
-    cR(1:578)     = initCR;
+    cR(1:1218)     = initCR;
     cN            = zeros(nc, 1);
-    cN(5203:5780) = initCN;
+    cN(10963:12180) = initCN;
     cR_N          = zeros(nc, 1);
   case 2
     cR   = ones(nc, 1);
@@ -110,6 +114,6 @@ for istate = 1 : numel(states)
     title('R-N concentration')
 
     drawnow
-    pause(0.5);
+    pause(0.1);
     
 end
