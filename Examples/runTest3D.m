@@ -22,7 +22,7 @@ paramobj = paramobj.validateInputParams();
 model = ReactionDiffusion(paramobj);
 
 % setup schedule
-total = 1*micro*second;
+total = 1*nano*second;
 n     = 100;
 dt    = total/n;
 step  = struct('val', dt*ones(n, 1), 'control', ones(n, 1));
@@ -31,8 +31,8 @@ control.none = [];
 schedule = struct('control', control, 'step', step);
 
 G = model.G;
-receptorCells = (1 : 1218)';
-injectionCells = (10963 : 12180)';
+receptorCells = (10963 : 12180);
+injectionCells = (1 : 1218);
 
 
 doplot = false;
@@ -63,9 +63,9 @@ initcase = 1;
 switch initcase
   case 1
     cR                 = zeros(nc, 1);
-    cR(injectionCells) = initCR;
+    cR(receptorCells) = initCR;
     cN                 = zeros(nc, 1);
-    cN(receptorCells)  = initCN;
+    cN(injectionCells)  = initCN;
     cR_N               = zeros(nc, 1);
   case 2
     cR   = ones(nc, 1);
@@ -83,7 +83,6 @@ nls = NonLinearSolver();
 nls.errorOnFailure = false;
 
 [~, states, report] = simulateScheduleAD(initstate, model, schedule, 'NonLinearSolver', nls);
-
 
 %%
 

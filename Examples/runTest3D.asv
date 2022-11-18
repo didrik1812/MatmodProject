@@ -22,10 +22,10 @@ paramobj = paramobj.validateInputParams();
 model = ReactionDiffusion(paramobj);
 
 % setup schedule
-total = 5e-8;
-n  = 10;
-dt = total/n;
-step = struct('val', dt*ones(n, 1), 'control', ones(n, 1));
+total = 1*nano*second;
+n     = 100;
+dt    = total/n;
+step  = struct('val', dt*ones(n, 1), 'control', ones(n, 1));
 
 control.none = [];
 schedule = struct('control', control, 'step', step);
@@ -33,35 +33,40 @@ schedule = struct('control', control, 'step', step);
 G = model.G;
 receptorCells = (1 : 1218)';
 injectionCells = (10963 : 12180)';
-% plot injection and receptor cells
-
-%figure
-%plotGrid(G, 'facecolor', 'none');
-%plotGrid(G, injectionCells, 'facecolor', 'yellow');
-%plotGrid(G, receptorCells, 'facecolor', 'red');
-%view(33, 26);
 
 
-
+doplot = false;
+if doplot
+    % plot injection and receptor cells
+    figure
+    plotGrid(G, 'facecolor', 'none');
+    plotGrid(G, injectionCells, 'facecolor', 'yellow');
+    plotGrid(G, receptorCells, 'facecolor', 'red');
+    view(33, 26);
+    return
+end
 
 % setup initial state
 
+A = 6.02214076e23; % Avogadro constant
+
 nc     = G.cells.num;
 vols   = G.cells.volumes;
-initCR = 1000*((micro*meter)^2)/sum(G.cells.volumes(1:1218)); %fix this according to dimension
-V      = sum(G.cells.volumes(10963:12180));
 
-m=1;
-initCN=(5000*m)/V;%fix this according to dimension
+initCR = (1000/A)*((micro*meter)^2)/sum(G.cells.volumes(receptorCells));
+
+V      = sum(G.cells.volumes(injectionCells));
+initCN = (5000/A)/V;
+
 initcase = 1;
 
 switch initcase
   case 1
-    cR            = zeros(nc, 1);
-    cR(1:578)     = initCR;
-    cN            = zeros(nc, 1);
-    cN(5203:5780) = initCN;
-    cR_N          = zeros(nc, 1);
+    cR                 = zeros(nc, 1);
+    cR(injectionCells) = initCR;
+    cN                 = zeros(nc, 1);
+    cN(receptorCells)  = initCN;
+    cR_N               = zeros(nc, 1);
   case 2
     cR   = ones(nc, 1);
     cN   = ones(nc, 1);
@@ -79,8 +84,12 @@ nls.errorOnFailure = false;
 
 [~, states, report] = simulateScheduleAD(initstate, model, schedule, 'NonLinearSolver', nls);
 
-
-
+figure
+f=boundaryFaces(G);
+plot
+plotToolbar(G,states)
+view(30,60)
+return
 %%
 
 % Remove empty states (could have been created if solver did not converge)
@@ -112,6 +121,6 @@ for istate = 1 : numel(states)
     title('R-N concentration')
 
     drawnow
-    pause(0.5);
+    pause(0.1);
     
 end

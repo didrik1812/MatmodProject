@@ -1,11 +1,10 @@
-function G = Cylindergrid(r_max , r_min ,step , z_max, dens)
+function G = Cylindergrid2D(r_max , r_min ,step , z_max, dens)
 % Make a cylindrical triangular grid
     arguments
         r_max(1,1) double  = log(0.22*micro*meter);
         r_min(1,1) double  = log(0.1*nano*meter);
         step(1,1) double   = 0.25;
-        %z_max(1,1) double = convertFrom(ones(1,1)*(1.5), nano*meter);
-        z_max(1,10) double = convertFrom(ones(10,1)*(15/10), nano*meter);
+        z_max(1,1) double = convertFrom(ones(1,1)*(1.5), meter); %Does not work for nano*meter
         dens(1,1) double   = 20;
     end
     P = [];
@@ -15,5 +14,5 @@ function G = Cylindergrid(r_max , r_min ,step , z_max, dens)
 
     P = unique(P', "rows");
 
-    G = makeLayeredGrid(triangleGrid(P), z_max);
+    G = triangleGrid(P);
 end
