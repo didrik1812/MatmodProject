@@ -2,62 +2,88 @@ close all
 
 mrstModule add ad-core mrst-gui 
 
-jsonfile = fileread('diffusion.json');
-jsonstruct = jsondecode(jsonfile);
+% jsonfile = fileread('diffusion2.json');
+% jsonstruct = jsondecode(jsonfile);
 
-paramobj = ReactionDiffusionInputParamsO(jsonstruct);
+paramobj       = ReactionDiffusionInputParams([]);
+paramobj.k_1   = 4e6*(mol/litre)*(1/second);
+paramobj.k_2   = 5*(1/second);
+paramobj.N.D   = 8e-7*(meter^2/second);
+paramobj.R.D   = 0*(meter^2/second);
+paramobj.R_N.D = 0*(meter^2/second);
 
-G = cartGrid([50, 50]);
+G = Cylindergrid2D();
 G = computeGeometry(G);
 
 paramobj.G = G;
-
 paramobj = paramobj.validateInputParams();
-
-model = ReactionDiffusionO(paramobj);
-
+disp(paramobj.N.D)
+model = ReactionDiffusion(paramobj);
 
 % setup schedule
-total = 100;
-n  = 100;
-dt = total/n;
-step = struct('val', dt*ones(n, 1), 'control', ones(n, 1));
+total = 1*nano*second;
+n     = 100;
+dt    = total/n;
+step  = struct('val', dt*ones(n, 1), 'control', ones(n, 1));
 
 control.none = [];
 schedule = struct('control', control, 'step', step);
 
-% setup initial state
+G = model.G;
+receptorCells = (1 :1218)';
+injectionCells = (829 : 830)';
 
-nc = G.cells.num;
-vols = G.cells.volumes;
 
-initcase = 1;
-switch initcase
-  case 1
-    cA      = zeros(nc, 1);
-    cA(1)   = sum(vols);
-    cB      = zeros(nc, 1);
-    cB(end) = sum(vols);
-    cC = zeros(nc, 1);
-  case 2
-    cA = ones(nc, 1);
-    cB = ones(nc, 1);
-    cC = zeros(nc, 1);
+doplot = false;
+if doplot
+    % plot injection and receptor cells
+    figure
+    plotGrid(G, 'facecolor', 'none');
+    plotGrid(G, injectionCells, 'facecolor', 'yellow');
+    plotGrid(G, receptorCells, 'facecolor', 'red');
+    return
 end
 
-initstate.A.c = cA;
-initstate.B.c = cB;
-initstate.C.c = cC;
+% setup initial state
+
+A = 6.02214076e23; % Avogadro constant
+
+nc     = G.cells.num;
+vols   = G.cells.volumes;
+
+initCR = (1000/A)*((micro*meter)^2)/sum(G.cells.volumes(receptorCells));
+
+V      = sum(G.cells.volumes(injectionCells));
+initCN = (5000/A)/V;
+
+initcase = 1;
+
+switch initcase
+  case 1
+    cR                 = zeros(nc, 1);
+    cR(receptorCells) = initCR;
+    cN                 = zeros(nc, 1);
+    cN(injectionCells)  = initCN;
+    cR_N               = zeros(nc, 1);
+  case 2
+    cR   = ones(nc, 1);
+    cN   = ones(nc, 1);
+    cR_N = zeros(nc, 1);
+end
+
+initstate.R.c   = cR;
+initstate.N.c   = cN;
+initstate.R_N.c = cR_N;
 
 % run simulation
 
 nls = NonLinearSolver();
 nls.errorOnFailure = false;
-
 [~, states, report] = simulateScheduleAD(initstate, model, schedule, 'NonLinearSolver', nls);
 
-
-
+figure
+plotToolbar(G,states)
+return
 %%
 
 % Remove empty states (could have been created if solver did not converge)
@@ -72,23 +98,24 @@ for istate = 1 : numel(states)
 
     set(0, 'currentfigure', 1);
     cla
-    plotCellData(model.G, state.A.c);
+    plotCellData(model.G, state.R.c);
     colorbar
-    title('A concentration')
+    title('R concentration')
     
     set(0, 'currentfigure', 2);
     cla
-    plotCellData(model.G, state.B.c);
+    plotCellData(model.G, state.N.c);
     colorbar
-    title('B concentration')
+    title('N concentration')
 
     set(0, 'currentfigure', 3);
     cla
-    plotCellData(model.G, state.C.c);
+    plotCellData(model.G, state.R_N.c);
     colorbar
-    title('C concentration')
+    title('R-N concentration')
 
     drawnow
     pause(0.1);
     
 end
+
