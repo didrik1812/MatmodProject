@@ -1,19 +1,21 @@
-classdef ReactionDiffusion < BaseModel
+classdef ReactionDiffusionGlia < BaseModel
 
     properties
         
-        R % Diffision model for component R
-        N % Diffision model for component N
-        R_N % Diffision model for result
+        T % Diffusion model for component R
+        N % Diffusion model for component N
+        T_N %Diffuison model for component T_N
+        N_I % Diffusion model for result N_I
         
         k_1 % reaction constant k_1
         k_2 % reaction constant k_2
+        k_3 % reaction constant k_3
         
     end
     
     methods
         
-        function model = ReactionDiffusion(paramobj)
+        function model = ReactionDiffusionGlia(paramobj)
             
             model = model@BaseModel();
             
@@ -23,13 +25,15 @@ classdef ReactionDiffusion < BaseModel
             %% Setup the model using the input parameters
             fdnames = {'G'            , ...
                        'k_1'          , ...
-                       'k_2'};
+                       'k_2'          , ...
+                       'k_3'};
             
             model = dispatchParams(model, paramobj, fdnames);
 
-            model.R = DiffusionComponent(paramobj.R);
-            model.N = DiffusionComponent(paramobj.N);
-            model.R_N = DiffusionComponent(paramobj.R_N);
+            model.T = DiffusionComponentGlia(paramobj.T);
+            model.N = DiffusionComponentGlia(paramobj.N);
+            model.T_N = DiffusionComponentGlia(paramobj.T_N);
+            model.N_I = DiffusionComponentGlia(paramobj.N_I);
             
         end
 
@@ -42,14 +46,16 @@ classdef ReactionDiffusion < BaseModel
             model = registerVarAndPropfuncNames@BaseModel(model);
             
             %% Temperature dispatch functions
-            fn = @ReactionDiffusion.updateSourceTerm;
+            fn = @ReactionDiffusionGlia.updateSourceTerm;
             
-            inputnames = {{'R', 'c'}, ...
+            inputnames = {{'T', 'c'}, ...
                           {'N', 'c'}, ...
-                          {'R_N', 'c'}};
-            model = model.registerPropFunction({{'R', 'source'} , fn, inputnames});
+                          {'T_N', 'c'}, ...
+                          {'N_I', 'c'}};
+            model = model.registerPropFunction({{'T', 'source'} , fn, inputnames});
             model = model.registerPropFunction({{'N', 'source'} , fn, inputnames});
-            model = model.registerPropFunction({{'R_N', 'source'} , fn, inputnames});
+            model = model.registerPropFunction({{'T_N', 'source'} , fn, inputnames});
+            model = model.registerPropFunction({{'N_I', 'source'} , fn, inputnames});
             
         end
 
@@ -62,18 +68,22 @@ classdef ReactionDiffusion < BaseModel
 
             k_1 = model.k_1;
             k_2 = model.k_2;
+            k_3 = model.k_3;
             vols = model.G.cells.volumes;
             
-            cR = state.R.c;
+            cT = state.R.c;
             cN = state.N.c;
-            cR_N = state.R_N.c;
+            cT_N = state.T_N.c;
+            cN_I = state.N_I.c;
 
-            Re1 = k_1.*vols.*cR.*cN;
-            Re2 = k_2.*vols.*cR_N;
+            Re1 = k_1.*vols.*cT.*cN;
+            Re2 = k_2.*vols.*cT_N;
+            Re3 = k_3.*vols.*cT_N;
 
-            state.R.source = -Re1 +Re2;
+            state.T.source = -Re1 +Re2;
             state.N.source = -Re1 +Re2;
-            state.R_N.source = Re1 -Re2;
+            state.T_N.source = Re1 -Re2 - Re3;
+            state.N_I.source = Re3;
             
         end
         
@@ -82,32 +92,39 @@ classdef ReactionDiffusion < BaseModel
             
             state = model.initStateAD(state);
 
-            state.R = model.R.updateFlux(state.R);
+            state.T = model.T.updateFlux(state.T);
             state.N = model.N.updateFlux(state.N);
-            state.R_N = model.R_N.updateFlux(state.R_N);
+            state.T_N = model.T_N.updateFlux(state.T_N);
+            state.N_I = model.N_I.updateFlux(state.N_I);
             
             state = model.updateSourceTerm(state);
 
-            state.R = model.R.updateMassAccum(state.R, state0.R, dt);
+            state.T = model.T.updateMassAccum(state.T, state0.T, dt);
             state.N = model.N.updateMassAccum(state.N, state0.N, dt);
-            state.R_N = model.R_N.updateMassAccum(state.R_N, state0.R_N, dt);
+            state.T_N = model.T_N.updateMassAccum(state.T_N, state0.T_N, dt);
+            state.N_I = model.N_I.updateMassAccum(state.N_I, state0.N_I, dt);
             
-            state.R = model.R.updateMassConservation(state.R);
+            state.T = model.T.updateMassConservation(state.T);
             state.N = model.N.updateMassConservation(state.N);
-            state.R_N = model.R_N.updateMassConservation(state.R_N);
+            state.T_N = model.T_N.updateMassConservation(state.T_N);
+            state.N_I = model.N_I.updateMassConservation(state.N_I);
             
             eqs = {}; types = {}; names = {};
             
-            eqs{end + 1}   = state.R.massCons;
-            names{end + 1} = 'massCons R';
+            eqs{end + 1}   = state.T.massCons;
+            names{end + 1} = 'massCons T';
             types{end + 1} = 'cell';
             
             eqs{end + 1}   = state.N.massCons;
             names{end + 1} = 'massCons N';
             types{end + 1} = 'cell';
+            
+            eqs{end + 1}   = state.T_N.massCons;
+            names{end + 1} = 'massCons T_N';
+            types{end + 1} = 'cell';
 
-            eqs{end + 1}   = state.R_N.massCons;
-            names{end + 1} = 'massCons R_N';
+            eqs{end + 1}   = state.N_I.massCons;
+            names{end + 1} = 'massCons N_I';
             types{end + 1} = 'cell';
                         
             primaryVars = model.getPrimaryVariables();
@@ -131,9 +148,10 @@ classdef ReactionDiffusion < BaseModel
         
         function primaryvarnames = getPrimaryVariables(model)
 
-            primaryvarnames = {{'R', 'c'}, ...
+            primaryvarnames = {{'T', 'c'}, ...
                                {'N', 'c'}, ...
-                               {'R_N', 'c'}};
+                               {'T_N', 'c'}, ...
+                               {'N_I', 'c'}};
             
         end
         
