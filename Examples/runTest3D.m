@@ -90,14 +90,19 @@ nls.errorOnFailure = false;
 ind = cellfun(@(state) ~isempty(state), states);
 states = states(ind);
 
-figure(1); figure(2); figure(3);
+figure(1); figure(2); figure(3);figure(4);
+
+C_R_vec = zeros(n,1);
+C_RN_vec = zeros(n,1);
+
 
 for istate = 1 : numel(states)
 
     state = states{istate};
 
-    set(0, 'currentfigure', 1);
-    cla
+    %set(0, 'currentfigure', 1);
+    %cla
+    subplot(2,2,1)
     plotCellData(model.G, state.R.c);view(30,60);
     colorbar
     title('R concentration')
@@ -114,7 +119,19 @@ for istate = 1 : numel(states)
     colorbar
     title('R-N concentration')
 
+    C_R_vec(istate) = sum(state.R.c);
+    C_RN_vec(istate) = sum(state.R_N.c);
+
+    set(0,'currentfigure',4);
+    cla
+    plot(1:n,C_R_vec, "g", 1:n, C_RN_vec, "b");
+    title("Concentration of receptors")
+    legend("C_{R}","C_{RN}")
+    
     drawnow
     pause(0.1);
     
 end
+
+transmitt = find(C_R_vec < C_RN_vec,1,"first");
+disp(["signal transmitted at timestep ", transmitt])
