@@ -1,5 +1,5 @@
 # Modelling reaction-diffusion activity between neurons
-This repository contains code for modelling reaction-diffusion activity between neurons and is part of our project work in TMA4195. The code is built upon [Xavier's](https://github.com/xavierr) code, which is available on [bitbucket](https://bitbucket.org/mrst/2022-matmod/src/master/), which again is built upon the [BattMo](https://github.com/BattMoTeam/BattMo) library.
+This repository contains code for modelling reaction-diffusion activity between neurons and is part of our project work in TMA4195. The code is built upon [Xavier Raynaud's](https://github.com/xavierr) code, which is available on [bitbucket](https://bitbucket.org/mrst/2022-matmod/src/master/), which again is built upon the [BattMo](https://github.com/BattMoTeam/BattMo) library.
 
 ## Installation
 
