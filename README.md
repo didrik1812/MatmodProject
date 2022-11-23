@@ -17,6 +17,7 @@ The directory `models` contains the model classes which uses BattMo (and MRST) f
 * `runTest2D.m`: Reduces the dimension from 3D to 2D, and runs the simulation on a 2D circle
 * `runTest3DGlia.m`: Implements glia-cells in the 3D cylinder.
 
+The directory `pythonScheme` contains the python code which has implemented a finite difference scheme for solving the reaction-diffusion model.
 
 ## Acknowledgements
 We want to adress special thanks to [Xavier](https://github.com/xavierr) for very good guidance and debugging with the MATLAB code. 
